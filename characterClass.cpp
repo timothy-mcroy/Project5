@@ -4,16 +4,11 @@ characterClass.h
 
 */
 
-
-
-#ifndef MAPOBJECT_H
-#define MAPOBJECT_H
-#include "mapObject.cpp"
-#include "gear.h"
 #include <vector>
 #include <iostream>
-#include "input.h"
+#include "input.cpp"
 #include "gear.h"
+
 template <typename img>
 class characterClass:  protected mapObject <img>
 {
