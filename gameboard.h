@@ -41,8 +41,6 @@ gameboard<img>::gameboard(unsigned width, img terrain): m_width(width), m_height
 	for (unsigned i = 0; i < m_width; i++)
 		for(unsigned j= 0; j<m_height; j++)
 			playmap[i][j] = mapObject<img>(i, j, "terrain", m_terrain);
-    std::cout<<"Leaving leaving 1st constructor"<<std::endl;
-	printMap(2);
 }
 
 template <typename img>
@@ -51,10 +49,10 @@ gameboard<img>::gameboard(unsigned width, unsigned height, img terrain)
 {
     //std::vector< std::vector < mapObject<img> > > playmap(width, std::vector<mapObject<img> > (height));
 	for (unsigned i = 0; i < m_width; i++)
-		for(unsigned j= 0; j<m_height; j++)
-			playmap[i][j] = mapObject<img>(i, j, "terrain", m_terrain);
-    std::cout<<"Leaving 2nd constructor"<<std::endl;
-	printMap(2);
+        for(unsigned j = 0; j < m_height; j++)
+            playmap[i][j] = mapObject<img>(i, j, "terrain", m_terrain);
+
+    printMap();
 }
 
 template <typename img>
@@ -62,14 +60,16 @@ void gameboard<img>::printMap(unsigned buff)
 {
     std::cout<<std::endl;
 	std::cout<<std::setw(buff+2)<<" ";
-	for (unsigned i = 0; i < m_width; i++)
+	for (unsigned i = 0; i < m_height; i++)
         std::cout<<std::setw(buff)<<i;
     std::cout<<std::endl;
-	for (unsigned i = 0; i < m_height; i++)
+	for (unsigned i = 0; i < m_width; i++)
     {
         std::cout<<std::endl<<std::setw(buff+2)<<i;
-		for(unsigned j= 0; j<m_width; j++)
-			std::cout<<std::setw(buff)<<playmap[i][j].visualRepresentation;
+		for(unsigned j= 0; j<m_height; j++)
+        {
+            std::cout<<std::setw(buff)<<playmap[i][j].visualRepresentation;
+        }
     }
     std::cout<<std::endl;
 
@@ -82,19 +82,18 @@ void gameboard<img>::moveTo(mapObject<img> &before, mapObject<img> &after)
     unsigned bx, by, ax, ay;
     if (!after.impassable)
     {
-        mapObject<img> tmp = mapObject<img>(before);
-        before.moveTo(after);
-        after.moveTo(tmp);
         bx=before.xlocation;
         by=before.ylocation;
         ax=after.xlocation;
         ay=after.ylocation;
-        playmap[bx][by] = before;
-        playmap[ax][ay] = after;
+        before.moveTo(after);
+        playmap[bx][by] = mapObject<img>(bx, by, "terrain", m_terrain);
+        playmap[ax][ay] = before;
+
     }
     else
     {
-        std::cout<<"Impassable object!  Maybe you meant to swap?"<<std::endl;
+        std::cout<<"Impassable object!"<<std::endl;
     }
 }
 
@@ -121,13 +120,19 @@ std::list<std::string> gameboard<img>::getNames()
 template <typename img>
 std::pair<unsigned, unsigned> gameboard<img>::findCoord(std::string iName)
 {
+
     //A more efficent way would be to keep a hash map of names: coordinates
-    for (unsigned i =0; i< m_height;i++)
-        for (unsigned j=0; j< m_width;j++)
+    for (unsigned i =0; i< m_width;i++)
+    {
+        for (unsigned j=0; j< m_height;j++)
         {
             if (playmap[i][j].itemName == iName)
+            {
                 return std::pair<unsigned, unsigned>(i,j);
+            }
         }
+    }
+
     return std::pair<unsigned,unsigned>(m_width+1, m_height+1);
 }
 
@@ -144,7 +149,7 @@ void gameboard<img>::placeMember(unsigned x, unsigned y, mapObject<img> &charact
     else
     {
         moveTo(character, playmap[x][y]);
-        std::cout<<"Detected that the character is already placed. Refusing to place the character. \n";
+
     }
 }
 #endif // GAMEBOARD_H

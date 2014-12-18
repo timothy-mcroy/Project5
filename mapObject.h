@@ -3,7 +3,7 @@
 #include <iostream>
 #ifndef MAPOBJECT_H
 #define MAPOBJECT_H
-
+#include <cmath>
 
 template  < typename img>
 class mapObject
@@ -71,8 +71,12 @@ void mapObject<img>::moveTo(mapObject<img> target)
 template <typename img>
 unsigned mapObject<img>::distance(const mapObject & other) const
 {
-	unsigned xdist = std::max(xlocation, other.xlocation) - std::min(xlocation,other.xlocation);
-	unsigned ydist = std::max(ylocation, other.ylocation) - std::min(ylocation,other.ylocation);
+
+	unsigned xdist = std::abs(other.xlocation-xlocation);
+	std::cout<<"other.ylocation = "<<other.ylocation<<std::endl;
+	std::cout<<"other.xlocation = "<<other.xlocation<<std::endl;
+	unsigned ydist = std::abs(other.ylocation-ylocation);
+    std::cout<<"xdist + ydist = "<<xdist<<" , "<<ydist<<std::endl;
 	return xdist + ydist;
 }
 #endif

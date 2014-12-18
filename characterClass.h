@@ -86,7 +86,7 @@ damage(4)
 //CONSTRUCTOR
 template <typename img>
 characterClass<img> ::characterClass(std::string characterName, unsigned lvl, img Fig):
-max_hp(5*lvl),
+max_hp(10*lvl),
 current_hp(max_hp),
 moveSpeed(6),
 level(lvl),
@@ -121,6 +121,13 @@ characterClass<img>::~characterClass()
 }
 
 //ACCESS FUNCTIONS
+
+template <typename img>
+unsigned characterClass<img> ::get_attack_range()  const
+{
+    return attack_range;
+}
+
 template <typename img>
 unsigned characterClass<img> :: get_armor() const
 {

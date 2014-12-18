@@ -6,7 +6,7 @@
 */
 #include "Game.h"
 
-Game::Game():Player("", 'D'), GameMap(5, '_'), experience(0)
+Game::Game():Player("", 'P'), GameMap(5, '_'), experience(0)
 {
 	introduction(); //collects information on character.  Starts game
 }
@@ -43,12 +43,12 @@ bool Game::yesno()
 {
     std::string answer;
     std::vector <std::string> valid;
-	valid.resize(8);
+	//valid.resize(8);
 	valid.push_back("yes"); valid.push_back("Yes"); valid.push_back("y");valid.push_back("Y");
 	valid.push_back("n");  valid.push_back("N");valid.push_back("No"); valid.push_back("no");
-    bool yn;
+    unsigned yn;
     yn  = input<std::string>(answer, valid);
-    return !(yn > valid.size()/2);
+    return (yn < valid.size()/2);
 }
 void Game::introduction()
 {
@@ -58,10 +58,10 @@ void Game::introduction()
 	std::cout<<"What is your name? \n";
 	input<std::string>(Player.itemName);
 	std::cout<<"What a terrible name.  I am so sorry. \n";
-	std::cout<<"Have you played this game before?";
+	std::cout<<"Have you played this game before? \n";
 	yn =yesno();
 
-	if ( !yn)  //Answer was "no"
+	if ( !yn)  //Answer was no
 	{
 		std::cout<<"Would you like to run through a tutorial? \n";
 		yn = yesno();
@@ -93,29 +93,34 @@ void Game::Monster_turn(characterClass<char> Monster)
 		{
 			if ( Monster.get_attack_range()>=Monster.distance(Player))
 				{
-					Monster.attack(Player);
+					break;
 				}
 			else
 			{
 				int shift1=0;
 				int shift2=0;
-				go_up  = Player.ylocation <= Monster.ylocation;
-				go_right = Player.xlocation<= Monster.xlocation;
-				if (go_up && go_right)
-					shift2 = -1;
-				else if (!go_up && go_right)
-					shift2 = 1;
-				else if (go_up && !go_right)
-					shift1 = 1;
-				else
+				go_up  = Player.ylocation < Monster.ylocation;
+				go_right = Player.xlocation< Monster.xlocation;
+				if (go_up && go_right)              //Go North
 					shift1 = -1;
+				else if (!go_up && go_right)        //Go East
+					shift2 = 1;
+				else if (go_up && !go_right)        //Go West
+					shift2 = -1;
+				else                                //Go South
+					shift1 = 1;
 
 				GameMap.placeMember(Monster.xlocation+shift1, Monster.ylocation+shift2, Monster);
 				wait (1);
-				GameMap.printMap();
+				//GameMap.printMap();
 			}
 
 		}
+		if (Monster.get_attack_range()>=Monster.distance(Player))
+        {
+            Monster.attack(Player);
+        }
+
 
 
 }
@@ -198,39 +203,49 @@ void Game::Player_turn(std::vector<characterClass<char> > & monsters)
 
 bool Game::create_encounter()
 {
+    std::cout<<"starting Game::create_encounter() \n";
 	std::vector<characterClass< char> > monsters;
 	unsigned enemies = rand() % (3 + Player.get_Level()/2) +1;
-	unsigned level_adj = 3-enemies;
+	std::cout<<enemies<< " enemies";
+	//unsigned level_adj = 3-enemies;
 	unsigned i;
 	char symbol;
 	for (i = 0; i< enemies; i++)
     {
         symbol = (char)(((int)'0')+(i+1));
-		monsters.push_back(characterClass<char>("Blockhead" +symbol,
-                                           Player.get_Level()+level_adj,
+        std::string symbol1 = static_cast<std::ostringstream*>(&(std::ostringstream()<<(i+1) ) )->str();
+        //http://www.cplusplus.com/articles/D9j2Nwbp/
+		monsters.push_back(characterClass<char>(symbol1,
+                                           Player.get_Level(),
                                           symbol));
     }
-
 	unsigned w  =rand() %10 +11;
 	unsigned h   =rand() %10 +11;
-	GameMap = gameboard(h, w);
+	std::cout<<"Constructing GameMap. \n";
+	GameMap = gameboard<char>(h, w, '_');
+	std::cout<<"Putting Player on GameMap. \n";
 	GameMap.placeMember(w/2, h/2, Player);
+    GameMap.printMap();
 	unsigned w0;
 	unsigned h1;
+    std::cout<<"Monsters are going to be on the map soon. \n";
 	for ( i=0; i< monsters.size(); i++)
 		{
 			do
 			{
-			w0 = rand() %20 +1;
-			h1 = rand() %20 +1;
+			w0 = rand() %w ;
+			h1 = rand() %h;
 			}
-			while (w0 == w && h1 == h);
-
-			GameMap.placeMember(w0, h1, monsters[i]);
+			while (w0 == w/2 && h1 == h/2);
+            std::cout<<"Placing monster."<<i<<" \n";
+            std::cout<<w0<<" , "<<h1<<std::endl;
+			GameMap.placeMember(h1, w0, monsters[i]);
+			std::cout<<"completed "<<i+1<<"/"<<monsters.size()<<std::endl;
 		}
-
+    std::cout<<"Monsters are on the map."<<std::endl;
 	while(!monsters.empty())
 		{
+            GameMap.printMap();
 			Player_turn(monsters);
 			for (i= 0;i< monsters.size();i++)
 				{
@@ -267,24 +282,42 @@ void Game::addXP(unsigned xp)
 
 bool Game::player_Attack(std::vector<characterClass<char> > &monsters)
 	{
-		characterClass<char> enemy = monsters[0];
+        std::cout<<"Entering player_Attack() \n";
+
+		std::cout<<"enemy is established \n";
 		//Print encounter_enemies array
 		std::string choice;
 		std::vector <characterClass<char> > available_enemies;
+		std::cout<<"Program still running"<<std::endl;
 		std::vector <std::string> enemy_names;
-		for (std::vector< characterClass<char> > ::iterator iter; iter!=monsters.end();++iter)
+        for (unsigned i= 0; i< monsters.size();i++)
 			{
-				if(Player.distance(*iter) <= Player.get_attack_range())\
+			    std::cout<<"distance from monster i is = "<<Player.distance(monsters[i]);
+
+			    std::cout<<"Inside the for loop of player_attack.  We're about to dereference iter. \n";
+			    std::cout<<"itemName = " << ((monsters[i]).itemName)<<std::endl;
+				if(Player.distance(monsters[i]) <= Player.get_attack_range())
 				{
-					available_enemies.push_back(*iter);
-					enemy_names.push_back((*iter).itemName);
+				    std::cout<<"pushing an enemy back. \n";
+					available_enemies.push_back(monsters[i]);
+					enemy_names.push_back((monsters[i]).itemName);
+					std::cout<<"itemName of enemy is"<<(monsters[i]).itemName<<std::endl;
 				}
 			}
-		if (available_enemies.empty())
-			return false;
 
+		if (enemy_names.empty())
+        {
+            std::cout<<"No available enemies. \n";
+            std::cout<<enemy_names[0];
+            return false;
+        }
 		else
 		{
+		    std::cout<<"Who do you attack? \n";
+		    for(std::vector<std::string>::iterator it = enemy_names.begin();it !=enemy_names.end();++it)
+            {
+                std::cout<< " " << *it;
+            }
 			input(choice, enemy_names);
 			unsigned i;
 			for ( i = 0; i < monsters.size();i++)
@@ -304,46 +337,56 @@ bool Game::player_Attack(std::vector<characterClass<char> > &monsters)
 
 bool Game::player_Move()
 {
+    std::cout<<"Entering player_Move() \n";
 	char dirs [] = "NnEeWwSs";
 	std::vector< char > directions(dirs, dirs+8);
 	char choice;
 	unsigned i;
 	for (i = 0; i < Player.get_moveSpeed(); i++)
 	{
+	    std::cout<<"You have "<<Player.get_moveSpeed()-i<<" squares of movement remaining. \n";
 		std::cout<<"What direction would you like to move?\n";
-		std::cout<<"Options are N, E, W, S";
+		std::cout<<"Options are N, E, W, S \n";
 		input <char>(choice, directions);
 		int shift1,shift2;
 		shift1 = shift2= 0;
 
-		if (choice == "N" || choice == "n")
-			shift2 =-1;
-		else if (choice == "E" || choice == "e" )
-			shift1 =1;
-		else if (choice == "W"|| choice == "w")
-			shift1 = -1;
+		if (choice == 'N' || choice == 'n')
+			shift1 =-1;
+		else if (choice == 'E' || choice == 'e' )
+			shift2 =1;
+		else if (choice == 'W'|| choice == 'w')
+			shift2 = -1;
 		else
-			shift2 = 1;
-		gameMap.placeMember(Player.xlocation + shift1, Player.ylocation + shift2, Player);
+			shift1 = 1;
+		GameMap.placeMember(Player.xlocation + shift1, Player.ylocation + shift2, Player);
+		GameMap.printMap();
+		std::cout<<Player.xlocation<<" , "<<Player.ylocation<<std::endl;
 	}
 }
 
 bool Game::player_Potion()
 {
+    std::cout<<"You drink a potion, hoping to heal some hitpoints. \n";
 	Player.heal(3*Player.get_Level());
+	std::string ctocontinue;
+	std::cin>> ctocontinue;
+
 }
 
 
 
 
-void wait (int seconds)
+void Game::wait (int seconds)
 {
-	clock_t begin = clock() * CLOCKS_PER_SEC;
-	clock_t end    = begin  +seconds;
-	while (begin < end )
+    std::cout<<"Entering wait function. \n";
+	clock_t beginning = clock() * CLOCKS_PER_SEC;
+	clock_t ending    = beginning  +seconds*CLOCKS_PER_SEC;
+	while (beginning < ending )
 		{
-			begin = clock() * CLOCKS_PER_SEC;
+			beginning = clock() * CLOCKS_PER_SEC;
 		}
+    std::cout<<"Leaving wait function. \n";
 }
 
 

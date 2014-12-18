@@ -34,19 +34,23 @@ template <typename T>
 unsigned input( T & data, const std::vector<T> & validInput )
 {
 	bool valid= false;
-	input( data );
+	input<T>( data );
 	for( unsigned i = 0; i < validInput.size();i++)
 		{
 			valid = valid || (validInput[i] ==data);
-			if (valid) 
+			if (valid)
+            {
+                std::cout<<"You chose validInput[" <<i <<"] which is == "<<validInput[i]<<std::endl;
 				return i;
+            }
+
 		}
 	if (!valid)
 	{
         std::cout<<"That was not a valid option.  Sorry!"<<std::endl;
-        input( data, validInput );
+        return input( data, validInput );
 	}
-	
+
 }
 
 
