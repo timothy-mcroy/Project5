@@ -1,6 +1,4 @@
 
-#ifndef INPUT_H
-#define INPUT_H
 #include <iostream>
 #include <vector>
 template <typename T>
@@ -36,7 +34,7 @@ void input( T & data, const std::vector<T> & validInput )
 {
 	bool valid= false;
 	input( data );
-	for( int i = 0; i < validInput.size();i++)
+	for( unsigned i = 0; i < validInput.size();i++)
 		{
 			valid = valid || (validInput[i] ==data);
 		}
@@ -48,8 +46,7 @@ void input( T & data, const std::vector<T> & validInput )
 }
 
 
-#endif
-/*
+
 int main()
 
 {
@@ -64,4 +61,4 @@ int main()
 
     return 0;
 }
-*/
+

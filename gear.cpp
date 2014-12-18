@@ -1,9 +1,10 @@
 
 
-#include GEAR_H
+#include "gear.h"
 //CONSTRUCTOR
-gear::gear(int slot)
+gear::gear(unsigned m_slot): slot(m_slot)
 {
+    //initializes the "empty slot", representing no equipped item.
 	if (slot > 5)
 	{
 	    std::cout<<"slot index is out of range in gear.h"<<std::endl;
@@ -11,16 +12,16 @@ gear::gear(int slot)
     }
 	// Default should simply represent the slot.
 	std::string slN[5] = {"Headband", "Armor", "Weapon", "Shield", "Boots"};
-	std::string stN[5]={ "attack", "attack range", "fortitude", "armor", "swiftness"};
-	for (int i =0; i< 5;i++)
+	std::string stN[6]={ "attack", "attack range", "fortitude", "armor", "swiftness", "damage"};
+	for (unsigned i =0; i< 5;i++)
 	{
 		slotName.push_back(slN[i]);
 		statNames.push_back(stN[i]);
 	}
-
+    statNames.push_back(stN[5]);
 	for (unsigned i=0; i< statNames.size();i++)
 		{
-			stat_bonuses.push_back(0);
+			stat_bonuses.push_back(0);// the empty slot does not convey any bonuses.
 		}
 
 	name.append(slotName[slot]);
@@ -48,7 +49,7 @@ gear::gear(int slot)
 
 
 //CONSTRUCTOR
-gear::gear(int level, int slot)
+gear::gear(unsigned level, unsigned m_slot): slot(m_slot)
 {
 	srand(time(NULL));
 
@@ -65,7 +66,7 @@ gear::gear(int level, int slot)
 
 
 
-	slot = rand() % slotName.size();
+	//slot = rand() % slotName.size();
 	totalBonuses = rand() % (2*level) + 1;  //2 is relatively arbitrary.  After some playtesting, more accurate numbers would be available.
 	for (unsigned i=0; i< statNames.size();i++)
 		{
@@ -94,11 +95,26 @@ gear::gear(int level, int slot)
 				}
 			}
 		}
-	std::cout<<"Finishing level constructor"<<std::endl;
+
 }
 
 
-std::ostream & operator<<(std::ostream & os, gear & item)
+gear::gear(const gear& other)
+{
+    name = other.name;
+	slotName = other.slotName;
+	totalBonuses = other.totalBonuses;
+	stat_bonuses = other.stat_bonuses; //[attack, attack_range, max_hp, armor, moveSpeed]
+	statNames = other.statNames;
+	slot = other.slot;
+
+}
+
+
+
+
+
+std::ostream & operator<<(std::ostream & os, const gear & item)
 {
 	os << item.name << ": ";
 	for (unsigned i =0; i<item.stat_bonuses.size(); i++)

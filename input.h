@@ -1,4 +1,7 @@
-
+//Tim, do not touch this again.
+//You will break it.  I promise
+//-Regards,
+//Past you.
 #ifndef INPUT_H
 #define INPUT_H
 #include <iostream>
@@ -7,7 +10,7 @@ template <typename T>
 void input( T &data) ;  //type validation only
 
 template <typename T>
-void input( T &data, const std::vector<T>);  //type and set validation
+unsigned input( T &data, const std::vector<T>& validInput);  //type and set validation
 
 
 
@@ -28,18 +31,22 @@ void input ( T &data)
 }
 
 template <typename T>
-void input( T & data, const std::vector<T> & validInput )
+unsigned input( T & data, const std::vector<T> & validInput )
 {
 	bool valid= false;
 	input( data );
-	for( int i = 0; i < validInput.size();i++)
+	for( unsigned i = 0; i < validInput.size();i++)
 		{
-			valid = valid || validInput[i] ==data;
+			valid = valid || (validInput[i] ==data);
+			if (valid) 
+				return i;
 		}
 	if (!valid)
 	{
+        std::cout<<"That was not a valid option.  Sorry!"<<std::endl;
         input( data, validInput );
 	}
+	
 }
 
 

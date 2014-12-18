@@ -1,5 +1,6 @@
 
-
+#include <utility>
+#include <list>
 #include <vector>
 #include <string>
 #include "mapObject.h"
@@ -7,60 +8,145 @@
 #ifndef GAMEBOARD_H
 #define GAMEBOARD_H
 
+
 template <typename img>
 class gameboard
 {
-	gameboard(unsigned width);
-	gameboard(unsigned width, unsigned height);
-	void moveTo(unsigned beforeX, unsigned beforeY, unsigned afterX, unsigned afterY);
+    public:
+        gameboard<img>(unsigned width, img terrain);
+        gameboard<img>(unsigned width, unsigned height, img terrain);
+        //void moveTo(unsigned beforeX, unsigned beforeY, unsigned afterX, unsigned afterY);
 
-	mapObject<img> terrain;
-	printMap(unsigned buff);
+        void printMap(unsigned buff=2);
+
+        std::list< std::string > getNames();
+        std::pair<unsigned,unsigned> findCoord(std::string iName);
+        void placeMember(unsigned x, unsigned y, mapObject<img> &character);
+    private:
+        void moveTo(mapObject<img> &before, mapObject<img> &after);
+        std::vector< std::vector < mapObject<img> > > playmap;
+        img m_terrain;
+        unsigned m_width;
+        unsigned m_height;
+};
 
 
-}
+
 
 
 template <typename img>
-gameboard<img>::gameboard(unsigned width, img terrain)
+gameboard<img>::gameboard(unsigned width, img terrain): m_width(width), m_height(width),playmap(width, std::vector<mapObject<img> > (width)), m_terrain(terrain)
 {
-	std::vector< std::vector < mapObject<img> > > playmap(width, vector<mapObject<img> > (width));
-	for (unsigned i = 0; i < width; i++)
-		for(unsigned j= 0; j<width; i++)
-			playmap[i][j] = mapObject(i, j, "terrain", terrain.visualRepresentation);
-
-	printMap(5);
+	//std::vector< std::vector < mapObject<img> > > playmap(width, std::vector<mapObject<img> > (width));
+	for (unsigned i = 0; i < m_width; i++)
+		for(unsigned j= 0; j<m_height; j++)
+			playmap[i][j] = mapObject<img>(i, j, "terrain", m_terrain);
+    std::cout<<"Leaving leaving 1st constructor"<<std::endl;
+	printMap(2);
 }
 
+template <typename img>
+gameboard<img>::gameboard(unsigned width, unsigned height, img terrain)
+: m_width(width), m_height(height),playmap(width, std::vector<mapObject<img> > (height)), m_terrain(terrain)
+{
+    //std::vector< std::vector < mapObject<img> > > playmap(width, std::vector<mapObject<img> > (height));
+	for (unsigned i = 0; i < m_width; i++)
+		for(unsigned j= 0; j<m_height; j++)
+			playmap[i][j] = mapObject<img>(i, j, "terrain", m_terrain);
+    std::cout<<"Leaving 2nd constructor"<<std::endl;
+	printMap(2);
+}
 
 template <typename img>
-gameboard<img>::printMap(unsigned buff)
+void gameboard<img>::printMap(unsigned buff)
 {
-	for (unsigned i = 0; i < width; i++)
-		for(unsigned j= 0; j<width; i++)
+    std::cout<<std::endl;
+	std::cout<<std::setw(buff+2)<<" ";
+	for (unsigned i = 0; i < m_width; i++)
+        std::cout<<std::setw(buff)<<i;
+    std::cout<<std::endl;
+	for (unsigned i = 0; i < m_height; i++)
+    {
+        std::cout<<std::endl<<std::setw(buff+2)<<i;
+		for(unsigned j= 0; j<m_width; j++)
 			std::cout<<std::setw(buff)<<playmap[i][j].visualRepresentation;
+    }
+    std::cout<<std::endl;
 
+}
+
+template <typename img>
+void gameboard<img>::moveTo(mapObject<img> &before, mapObject<img> &after)
+{
+    //This will work poorly when moving from different types of impassable terrain.  A more refined implementation would have two layers (one for player location), one for terrain.
+    unsigned bx, by, ax, ay;
+    if (!after.impassable)
+    {
+        mapObject<img> tmp = mapObject<img>(before);
+        before.moveTo(after);
+        after.moveTo(tmp);
+        bx=before.xlocation;
+        by=before.ylocation;
+        ax=after.xlocation;
+        ay=after.ylocation;
+        playmap[bx][by] = before;
+        playmap[ax][ay] = after;
+    }
+    else
+    {
+        std::cout<<"Impassable object!  Maybe you meant to swap?"<<std::endl;
+    }
+}
+
+
+
+template <typename img>
+std::list<std::string> gameboard<img>::getNames()
+{
+
+    //There's clearly room for efficiency improvements by moving the name tracking to be integrated with other operations
+    std::list <std::string> objectNames;
+    for (unsigned i =0; i< m_height;i++)
+        for (unsigned j=0; j< m_width;j++)
+        {
+            objectNames.push_back(playmap[i][j].itemName);
+        }
+
+
+    objectNames.remove("terrain");
+    return objectNames;
 }
 
 
 template <typename img>
-void gameboard<img>::moveTo(unsigned beforeX, unsigned beforeY, unsigned afterX, unsigned afterY)
+std::pair<unsigned, unsigned> gameboard<img>::findCoord(std::string iName)
 {
-	if (playmap[afterX][afterY].visualRepresentation == terrain.visualRepresentation)
-		{
-			playmap[afterX][afterY] = playmap[beforeX][beforeY];
-			playmap[afterX][afterY].moveTo(afterX, afterY);
-			playmap[beforeX][beforeY] = terrain;
-		}
-	else
-	{
-		std::cout<< "Impassable terrain!" << std::endl;
-	}
+    //A more efficent way would be to keep a hash map of names: coordinates
+    for (unsigned i =0; i< m_height;i++)
+        for (unsigned j=0; j< m_width;j++)
+        {
+            if (playmap[i][j].itemName == iName)
+                return std::pair<unsigned, unsigned>(i,j);
+        }
+    return std::pair<unsigned,unsigned>(m_width+1, m_height+1);
+}
+
+
+template <typename img>
+void gameboard<img>::placeMember(unsigned x, unsigned y, mapObject<img> &character)
+{
+    std::pair<unsigned,unsigned> alreadyPlaced = findCoord(character.itemName);
+    if (alreadyPlaced.first == (m_width+1) && alreadyPlaced.second == (m_height +1))
+    {
+        character.moveTo(playmap[x][y]);
+        playmap[x][y] = character;
+    }
+    else
+    {
+        moveTo(character, playmap[x][y]);
+        std::cout<<"Detected that the character is already placed. Refusing to place the character. \n";
+    }
 }
 #endif // GAMEBOARD_H
 
 
-int main ()
-{
-
-}
