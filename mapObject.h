@@ -16,7 +16,7 @@ class mapObject
 		int xlocation;
 		int ylocation;
 		bool impassable;
-		virtual void moveTo( mapObject<img> target );
+		virtual void moveTo( mapObject<img> &target );
 		img visualRepresentation;
 		std::string itemName;
 		unsigned distance(const mapObject & other) const;
@@ -61,7 +61,7 @@ mapObject<img>::~mapObject()
 
 
 template <typename img>
-void mapObject<img>::moveTo(mapObject<img> target)
+void mapObject<img>::moveTo(mapObject<img> &target)
 {
     xlocation= target.xlocation;
     ylocation= target.ylocation;
@@ -73,10 +73,7 @@ unsigned mapObject<img>::distance(const mapObject & other) const
 {
 
 	unsigned xdist = std::abs(other.xlocation-xlocation);
-	std::cout<<"other.ylocation = "<<other.ylocation<<std::endl;
-	std::cout<<"other.xlocation = "<<other.xlocation<<std::endl;
 	unsigned ydist = std::abs(other.ylocation-ylocation);
-    std::cout<<"xdist + ydist = "<<xdist<<" , "<<ydist<<std::endl;
 	return xdist + ydist;
 }
 #endif

@@ -19,7 +19,7 @@ unsigned Game::getXP()
 
 void Game::play()
 {
-	//complete this
+
 	bool continue_playing = true;
 	bool alive = true;
 	while(continue_playing)
@@ -27,7 +27,7 @@ void Game::play()
 		alive = create_encounter();
 		if (alive)
 			{
-			std::cout<<"You have surived another round.  Do you dare continue this insane backyard Game?\n";
+			std::cout<<"You have surived another round.  Do you dare continue this insane backyard-game?\n";
 			continue_playing = yesno();
 			}
 		continue_playing = continue_playing && alive;
@@ -57,7 +57,7 @@ void Game::introduction()
 	std::cout<<"Welcome to Plains and Pastures!  The Game game with a little sunlight! \n";
 	std::cout<<"What is your name? \n";
 	input<std::string>(Player.itemName);
-	std::cout<<"What a terrible name.  I am so sorry. \n";
+	std::cout<<"What a terrible name.  I am so sorry. \n \n \n";
 	std::cout<<"Have you played this game before? \n";
 	yn =yesno();
 
@@ -75,7 +75,6 @@ void Game::introduction()
 
     std::cout<<"Alright then.  I suppose you'd like to get to the action! \n";
 
-
 	play();
 
 }
@@ -85,7 +84,7 @@ void Game::level_up()
 	Player.level_up();
 }
 
-void Game::Monster_turn(characterClass<char> Monster)
+void Game::Monster_turn(characterClass<char> &Monster)
 {
 	bool go_right;
 	bool go_up;
@@ -112,12 +111,13 @@ void Game::Monster_turn(characterClass<char> Monster)
 
 				GameMap.placeMember(Monster.xlocation+shift1, Monster.ylocation+shift2, Monster);
 				wait (1);
-				//GameMap.printMap();
+
 			}
 
 		}
 		if (Monster.get_attack_range()>=Monster.distance(Player))
         {
+            std::cout<<Monster.itemName<<" is attacking you!\n";
             Monster.attack(Player);
         }
 
@@ -127,7 +127,7 @@ void Game::Monster_turn(characterClass<char> Monster)
 
 void Game::addGear(unsigned const & p_level)
 {
-	gear g = gear(p_level, rand()%5);
+	gear g = gear(p_level, rand()%5); //randomizing the slot bonus
 	std::cout<<"You found a "<<g<<'\n';
 	std::cout<<"In comparison, you have a "<<Player.equipped[g.slot];
 	if (yesno())//yes is true, no is false
@@ -140,14 +140,15 @@ void Game::addGear(unsigned const & p_level)
 void Game::Player_turn(std::vector<characterClass<char> > & monsters)
 {
 	std::string choice;
-	std::ostringstream convert; //for converting the index into a string.  		//
+
 	std::vector<std::string> turnOptions;
 	turnOptions.push_back("Attack");turnOptions.push_back( "Move"); turnOptions.push_back("Potion");
+	std::string symbol1;
 	for ( unsigned i =0; i <3;i++)
 	{
 		std::cout<<i+1<<". )"<<turnOptions[i]<<std::endl;
-		convert <<i+1;
-		turnOptions.push_back(convert.str());
+        symbol1 = static_cast<std::ostringstream*>(&(std::ostringstream()<<(i+1) ) )->str();
+		turnOptions.push_back(symbol1);
 	}
 
 	input<std::string> (choice, turnOptions);
@@ -155,19 +156,22 @@ void Game::Player_turn(std::vector<characterClass<char> > & monsters)
 	if (choice == "Attack" || choice == "1" )
 		{
 		//Attack code
-		player_Attack(monsters);
-		//Offer move code
-		std::cout<<"Would you like to move as well? \n";
-		pmove = yesno();
-		if(pmove)
-			{
-			player_Move();
-			}
-		else
-			{
-			player_Potion();
-			}
-		}
+		if (player_Attack(monsters))
+        {
+            std::cout<<"Would you like to move as well? \n";
+            pmove = yesno();
+            if(pmove)
+                {
+                player_Move();
+                }
+            else
+                {
+                player_Potion();
+                }
+            }
+        }
+
+
 	else if (choice == "Move" || choice == "2")
     {
         //Move code
@@ -184,6 +188,7 @@ void Game::Player_turn(std::vector<characterClass<char> > & monsters)
     {
 		//Potion code
 		//Offer move code
+		player_Potion();
 		std::cout<<"Would you like to attack as well? \n";
 		pmove = yesno();
 		if (pmove)
@@ -203,17 +208,16 @@ void Game::Player_turn(std::vector<characterClass<char> > & monsters)
 
 bool Game::create_encounter()
 {
-    std::cout<<"starting Game::create_encounter() \n";
 	std::vector<characterClass< char> > monsters;
-	unsigned enemies = rand() % (3 + Player.get_Level()/2) +1;
-	std::cout<<enemies<< " enemies";
+	unsigned enemies = rand() % (Player.get_Level()) +1;
 	//unsigned level_adj = 3-enemies;
 	unsigned i;
 	char symbol;
+	std::string symbol1;
 	for (i = 0; i< enemies; i++)
     {
         symbol = (char)(((int)'0')+(i+1));
-        std::string symbol1 = static_cast<std::ostringstream*>(&(std::ostringstream()<<(i+1) ) )->str();
+        symbol1 = static_cast<std::ostringstream*>(&(std::ostringstream()<<(i+1) ) )->str();
         //http://www.cplusplus.com/articles/D9j2Nwbp/
 		monsters.push_back(characterClass<char>(symbol1,
                                            Player.get_Level(),
@@ -221,14 +225,12 @@ bool Game::create_encounter()
     }
 	unsigned w  =rand() %10 +11;
 	unsigned h   =rand() %10 +11;
-	std::cout<<"Constructing GameMap. \n";
 	GameMap = gameboard<char>(h, w, '_');
-	std::cout<<"Putting Player on GameMap. \n";
 	GameMap.placeMember(w/2, h/2, Player);
     GameMap.printMap();
 	unsigned w0;
 	unsigned h1;
-    std::cout<<"Monsters are going to be on the map soon. \n";
+
 	for ( i=0; i< monsters.size(); i++)
 		{
 			do
@@ -237,12 +239,12 @@ bool Game::create_encounter()
 			h1 = rand() %h;
 			}
 			while (w0 == w/2 && h1 == h/2);
-            std::cout<<"Placing monster."<<i<<" \n";
-            std::cout<<w0<<" , "<<h1<<std::endl;
+
+
 			GameMap.placeMember(h1, w0, monsters[i]);
-			std::cout<<"completed "<<i+1<<"/"<<monsters.size()<<std::endl;
+
 		}
-    std::cout<<"Monsters are on the map."<<std::endl;
+
 	while(!monsters.empty())
 		{
             GameMap.printMap();
@@ -282,33 +284,25 @@ void Game::addXP(unsigned xp)
 
 bool Game::player_Attack(std::vector<characterClass<char> > &monsters)
 	{
-        std::cout<<"Entering player_Attack() \n";
 
-		std::cout<<"enemy is established \n";
-		//Print encounter_enemies array
+
 		std::string choice;
 		std::vector <characterClass<char> > available_enemies;
-		std::cout<<"Program still running"<<std::endl;
 		std::vector <std::string> enemy_names;
         for (unsigned i= 0; i< monsters.size();i++)
 			{
-			    std::cout<<"distance from monster i is = "<<Player.distance(monsters[i]);
-
-			    std::cout<<"Inside the for loop of player_attack.  We're about to dereference iter. \n";
-			    std::cout<<"itemName = " << ((monsters[i]).itemName)<<std::endl;
 				if(Player.distance(monsters[i]) <= Player.get_attack_range())
 				{
-				    std::cout<<"pushing an enemy back. \n";
+
 					available_enemies.push_back(monsters[i]);
 					enemy_names.push_back((monsters[i]).itemName);
-					std::cout<<"itemName of enemy is"<<(monsters[i]).itemName<<std::endl;
+
 				}
 			}
 
 		if (enemy_names.empty())
         {
-            std::cout<<"No available enemies. \n";
-            std::cout<<enemy_names[0];
+            std::cout<<"No enemies within your attack range. \n";
             return false;
         }
 		else
@@ -318,6 +312,7 @@ bool Game::player_Attack(std::vector<characterClass<char> > &monsters)
             {
                 std::cout<< " " << *it;
             }
+            std::cout<<std::endl;
 			input(choice, enemy_names);
 			unsigned i;
 			for ( i = 0; i < monsters.size();i++)
@@ -326,6 +321,16 @@ bool Game::player_Attack(std::vector<characterClass<char> > &monsters)
 						break;
 				}
 			Player.attack(monsters[i]);
+			if(monsters[i].get_currentHP()<0)
+			{
+			    unsigned x =monsters[i].xlocation+0;
+			    unsigned y =monsters[i].ylocation+0;
+			    mapObject<char> deadBody = mapObject<char>(x,y,monsters[i].itemName, 'X');
+			    GameMap.placeMember(x,y, deadBody);
+			    monsters.erase(monsters.begin()+i);
+			    std::cout<<"You scored a kill!\n";
+			}
+
 			return true;
 
 		}
@@ -335,7 +340,7 @@ bool Game::player_Attack(std::vector<characterClass<char> > &monsters)
 
 	}
 
-bool Game::player_Move()
+void Game::player_Move()
 {
     std::cout<<"Entering player_Move() \n";
 	char dirs [] = "NnEeWwSs";
@@ -361,16 +366,16 @@ bool Game::player_Move()
 			shift1 = 1;
 		GameMap.placeMember(Player.xlocation + shift1, Player.ylocation + shift2, Player);
 		GameMap.printMap();
-		std::cout<<Player.xlocation<<" , "<<Player.ylocation<<std::endl;
+
 	}
+
 }
 
 bool Game::player_Potion()
 {
     std::cout<<"You drink a potion, hoping to heal some hitpoints. \n";
 	Player.heal(3*Player.get_Level());
-	std::string ctocontinue;
-	std::cin>> ctocontinue;
+	std::cout<<"You are at "<<Player.get_currentHP()<<std::endl;
 
 }
 
@@ -379,14 +384,12 @@ bool Game::player_Potion()
 
 void Game::wait (int seconds)
 {
-    std::cout<<"Entering wait function. \n";
 	clock_t beginning = clock() * CLOCKS_PER_SEC;
 	clock_t ending    = beginning  +seconds*CLOCKS_PER_SEC;
 	while (beginning < ending )
 		{
 			beginning = clock() * CLOCKS_PER_SEC;
 		}
-    std::cout<<"Leaving wait function. \n";
 }
 
 

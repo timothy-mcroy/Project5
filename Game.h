@@ -24,13 +24,13 @@ private:
 	gameboard<char> GameMap;
     bool create_encounter();
     void level_up();
-    void Monster_turn(characterClass<char> Monster);
+    void Monster_turn(characterClass<char> &Monster);
     void Player_turn(std::vector<characterClass<char> > & monsters);
     unsigned experience;
     void addXP(unsigned xp); //checks xp to see if leveling is needed.
     void wait (int seconds);
     void addGear(const unsigned & level);
-    bool player_Move();
+    void player_Move();
     bool player_Potion();
     bool player_Attack(std::vector<characterClass<char> > & monsters);
 

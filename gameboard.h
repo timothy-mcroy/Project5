@@ -80,7 +80,7 @@ void gameboard<img>::moveTo(mapObject<img> &before, mapObject<img> &after)
 {
     //This will work poorly when moving from different types of impassable terrain.  A more refined implementation would have two layers (one for player location), one for terrain.
     unsigned bx, by, ax, ay;
-    if (!after.impassable)
+    if (after.impassable)
     {
         bx=before.xlocation;
         by=before.ylocation;
@@ -140,6 +140,12 @@ std::pair<unsigned, unsigned> gameboard<img>::findCoord(std::string iName)
 template <typename img>
 void gameboard<img>::placeMember(unsigned x, unsigned y, mapObject<img> &character)
 {
+    if (!(x<m_width && y < m_height))
+    {
+        std::cout<<"Out of map range! \n"<<std::endl;
+        return;
+    }
+
     std::pair<unsigned,unsigned> alreadyPlaced = findCoord(character.itemName);
     if (alreadyPlaced.first == (m_width+1) && alreadyPlaced.second == (m_height +1))
     {

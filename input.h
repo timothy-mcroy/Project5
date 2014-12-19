@@ -40,7 +40,6 @@ unsigned input( T & data, const std::vector<T> & validInput )
 			valid = valid || (validInput[i] ==data);
 			if (valid)
             {
-                std::cout<<"You chose validInput[" <<i <<"] which is == "<<validInput[i]<<std::endl;
 				return i;
             }
 
